@@ -27,7 +27,6 @@ email-validator==2.1.0
 jinja2==3.1.2
 
 # CORS
-python-cors==1.0.0
 
 # Development
 pytest==7.4.3

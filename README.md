@@ -247,6 +247,32 @@ Felipe Diniz - [@felipedinisz](https://github.com/felipedinisz)
 
 Project Link: [https://github.com/felipedinisz/anilist-sequel-finder](https://github.com/felipedinisz/anilist-sequel-finder)
 
+## ✅ Tests
+
+Basic automated tests (pytest) ensure the API root and health endpoints respond correctly.
+
+### Running Tests
+
+```bash
+cd backend
+../.venv/bin/python -m pytest -q
+```
+
+### Current Coverage (minimal initial suite)
+| Area          | Status |
+|---------------|--------|
+| Root endpoint | ✅ Pass |
+| Health check  | ✅ Pass |
+| Core logic (CLI) | ⏳ Planned |
+
+### Next Test Targets
+- CLI sequel detection logic (mock AniList responses)
+- Cache behavior (hit/miss statistics)
+- Rate limit backoff logic
+- Service layer (`anilist_client`) error handling
+
+Add tests before large refactors or new features to keep reliability high.
+
 ---
 
 ⭐ If you found this project useful, please consider giving it a star!
