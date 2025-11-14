@@ -245,7 +245,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 Felipe Diniz - [@felipedinisz](https://github.com/felipedinisz)
 
-Project Link: [https://github.com/felipedinisz/Estat-stica-e-IA-com-Python](https://github.com/felipedinisz/Estat-stica-e-IA-com-Python)
+Project Link: [https://github.com/felipedinisz/anilist-sequel-finder](https://github.com/felipedinisz/anilist-sequel-finder)
 
 ---
 
