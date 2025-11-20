@@ -4,6 +4,14 @@
 # CSV output files
 *.csv
 
+# Environment variables and secrets
+.env
+*.env
+!.env.example
+*.key
+*.pem
+*.secret
+
 # Python
 __pycache__/
 *.py[cod]
