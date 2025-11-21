@@ -3,7 +3,7 @@ User schemas for request/response validation
 """
 from datetime import datetime
 from typing import Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class UserBase(BaseModel):
@@ -26,14 +26,13 @@ class UserUpdate(BaseModel):
 
 class UserInDB(UserBase):
     """User schema as stored in database"""
+    model_config = ConfigDict(from_attributes=True)
+    
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
     last_sync: Optional[datetime] = None
     settings: dict = Field(default_factory=dict)
-    
-    class Config:
-        from_attributes = True
 
 
 class User(UserInDB):

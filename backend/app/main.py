@@ -3,8 +3,6 @@ FastAPI Application Entry Point
 """
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.api.v1 import auth
@@ -26,11 +24,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files
-app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
-
-# Setup templates
-templates = Jinja2Templates(directory="../frontend/templates")
+# Note: Static files and templates commented out until frontend is ready
+# app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
+# templates = Jinja2Templates(directory="../frontend/templates")
 
 # Include routers
 app.include_router(

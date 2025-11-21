@@ -1,7 +1,11 @@
 """Basic tests for FastAPI application root and health endpoints."""
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+
+# Ignore Python 3.14 deprecation warnings from dependencies
+pytestmark = pytest.mark.filterwarnings("ignore::DeprecationWarning")
 
 client = TestClient(app)
 

@@ -3,11 +3,12 @@ Core configuration using Pydantic Settings
 """
 from typing import List
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
+from pydantic import ConfigDict, field_validator
 
 
 class Settings(BaseSettings):
     """Application settings"""
+    model_config = ConfigDict(env_file=".env", case_sensitive=True)
     
     # App
     APP_NAME: str = "AniList Sequel Finder"
@@ -55,10 +56,6 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
         return v
-    
-    class Config:
-        env_file = ".env"
-        case_sensitive = True
 
 
 # Global settings instance
