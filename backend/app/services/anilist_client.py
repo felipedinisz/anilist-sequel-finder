@@ -167,6 +167,9 @@ class AniListClient:
                         romaji
                       }
                       format
+                      episodes
+                      seasonYear
+                      averageScore
                       coverImage {
                         large
                       }
@@ -222,7 +225,8 @@ class AniListClient:
                   }
                   format
                   episodes
-                  duration
+                  seasonYear
+                  averageScore
                   coverImage {
                     large
                   }
@@ -286,7 +290,8 @@ class AniListClient:
                     }
                     format
                     episodes
-                    duration
+                    seasonYear
+                    averageScore
                     coverImage {
                       large
                     }

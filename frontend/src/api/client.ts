@@ -18,6 +18,9 @@ export interface Sequel {
   missing_id: number;
   missing_title: string;
   missing_cover?: string;
+  missing_score?: number;
+  missing_episodes?: number;
+  missing_year?: number;
   format: string;
   depth: number;
 }

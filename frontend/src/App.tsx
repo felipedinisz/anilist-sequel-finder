@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { findSequels } from './api/client';
 import { SequelCard } from './components/SequelCard';
 import { UserBanner } from './components/UserBanner';
-import { Search, Loader2, AlertCircle, Filter, Sparkles, Star } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,6 +20,8 @@ function SequelFinder() {
   const [searchUser, setSearchUser] = useState('');
   const [minScore, setMinScore] = useState(0);
   const [includeUnrated, setIncludeUnrated] = useState(true);
+  const [layout, setLayout] = useState<'grid' | 'list' | 'gallery'>('grid');
+  const [sortBy, setSortBy] = useState<'score' | 'title' | 'year'>('score');
   const [filters, setFilters] = useState({
     TV: true,
     MOVIE: true,
@@ -37,7 +39,7 @@ function SequelFinder() {
 
   const filteredSequels = useMemo(() => {
     if (!data) return [];
-    return data.missing_sequels.filter((sequel) => {
+    let result = data.missing_sequels.filter((sequel) => {
       const format = sequel.format as keyof typeof filters;
       const formatMatch = filters[format] ?? true;
       
@@ -48,7 +50,22 @@ function SequelFinder() {
       
       return formatMatch && scoreMatch;
     });
-  }, [data, filters, minScore, includeUnrated]);
+
+    // Sorting
+    return result.sort((a, b) => {
+      if (sortBy === 'score') {
+        const scoreA = a.missing_score || 0;
+        const scoreB = b.missing_score || 0;
+        return scoreB - scoreA;
+      } else if (sortBy === 'year') {
+        const yearA = a.missing_year || 0;
+        const yearB = b.missing_year || 0;
+        return yearB - yearA;
+      } else {
+        return a.missing_title.localeCompare(b.missing_title);
+      }
+    });
+  }, [data, filters, minScore, includeUnrated, sortBy]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -225,6 +242,50 @@ function SequelFinder() {
                 </div>
               </div>
 
+              {/* View Controls */}
+              <div className="flex justify-end gap-4 mb-6">
+                <div className="flex items-center gap-2 bg-gray-900/50 p-1 rounded-lg border border-gray-800">
+                  <button
+                    onClick={() => setSortBy('score')}
+                    className={`p-2 rounded-md transition-colors ${sortBy === 'score' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}
+                    title="Sort by Score"
+                  >
+                    <Star className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setSortBy('title')}
+                    className={`p-2 rounded-md transition-colors ${sortBy === 'title' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}
+                    title="Sort by Title"
+                  >
+                    <ArrowUpDown className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2 bg-gray-900/50 p-1 rounded-lg border border-gray-800">
+                  <button
+                    onClick={() => setLayout('grid')}
+                    className={`p-2 rounded-md transition-colors ${layout === 'grid' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}
+                    title="Grid View"
+                  >
+                    <LayoutGrid className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setLayout('list')}
+                    className={`p-2 rounded-md transition-colors ${layout === 'list' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}
+                    title="List View"
+                  >
+                    <List className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => setLayout('gallery')}
+                    className={`p-2 rounded-md transition-colors ${layout === 'gallery' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}
+                    title="Gallery View"
+                  >
+                    <ImageIcon className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
               {filteredSequels.length === 0 ? (
                 <div className="text-center py-20 bg-gray-900/30 rounded-2xl border border-gray-800/50 border-dashed">
                   <div className="bg-gray-800 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -238,9 +299,17 @@ function SequelFinder() {
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className={`
+                  ${layout === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' : ''}
+                  ${layout === 'list' ? 'flex flex-col gap-3' : ''}
+                  ${layout === 'gallery' ? 'grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4' : ''}
+                `}>
                   {filteredSequels.map((sequel) => (
-                    <SequelCard key={`${sequel.base_id}-${sequel.missing_id}`} sequel={sequel} />
+                    <SequelCard 
+                      key={`${sequel.base_id}-${sequel.missing_id}`} 
+                      sequel={sequel} 
+                      layout={layout}
+                    />
                   ))}
                 </div>
               )}

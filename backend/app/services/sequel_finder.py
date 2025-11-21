@@ -155,6 +155,9 @@ async def find_missing_sequels(
                         "missing_id": nid,
                         "missing_title": node.get("title", {}).get("romaji"),
                         "missing_cover": node.get("coverImage", {}).get("large"),
+                        "missing_score": node.get("averageScore"),
+                        "missing_episodes": node.get("episodes"),
+                        "missing_year": node.get("seasonYear"),
                         "format": node.get("format"),
                         "depth": 1,
                     }
@@ -215,6 +218,9 @@ async def find_missing_sequels(
                                 "missing_id": nid,
                                 "missing_title": node.get("title", {}).get("romaji"),
                                 "missing_cover": node.get("coverImage", {}).get("large"),
+                                "missing_score": node.get("averageScore"),
+                                "missing_episodes": node.get("episodes"),
+                                "missing_year": node.get("seasonYear"),
                                 "format": node.get("format"),
                                 "depth": current_depth,
                             }
