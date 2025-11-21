@@ -4,7 +4,7 @@ AniList API Client
 
 import httpx
 import asyncio
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from app.core.config import settings
 from app.core.cache import cache
 
@@ -92,6 +92,30 @@ class AniListClient:
         result = await self._make_request(query)
         return result["data"]["Viewer"]
 
+    async def get_public_user_profile(self, username: str) -> Dict[str, Any]:
+        """Get public user profile details"""
+        query = """
+        query ($username: String) {
+          User(name: $username) {
+            id
+            name
+            avatar {
+              large
+            }
+            bannerImage
+            statistics {
+              anime {
+                count
+                minutesWatched
+                episodesWatched
+              }
+            }
+          }
+        }
+        """
+        result = await self._make_request(query, {"username": username})
+        return result["data"]["User"]
+
     async def get_user_anime_list(
         self, username: str, status: str, page: int = 1, per_page: int = 50
     ) -> Dict[str, Any]:
@@ -107,7 +131,7 @@ class AniListClient:
         Returns:
             Anime list data
         """
-        cache_key = f"user_list:{username}:{status}:{page}:{per_page}"
+        cache_key = f"user_list_v3:{username}:{status}:{page}:{per_page}"
         cached_data = await cache.get(cache_key)
         if cached_data:
             return cached_data
@@ -121,6 +145,7 @@ class AniListClient:
               total
             }
             mediaList(userName: $username, type: ANIME, status: $status) {
+              score(format: POINT_100)
               media {
                 id
                 title {
@@ -142,6 +167,9 @@ class AniListClient:
                         romaji
                       }
                       format
+                      coverImage {
+                        large
+                      }
                     }
                   }
                 }
@@ -158,14 +186,14 @@ class AniListClient:
         }
         result = await self._make_request(query, variables)
 
-        # Cache for 30 minutes
-        await cache.set(cache_key, result, ttl=1800)
+        # Cache for 5 minutes only, to ensure freshness while avoiding immediate re-fetches
+        await cache.set(cache_key, result, ttl=300)
 
         return result
 
     async def get_media_details(self, media_id: int) -> Dict[str, Any]:
         """Get details for a specific anime"""
-        cache_key = f"media_details:{media_id}"
+        cache_key = f"media_details_v2:{media_id}"
         cached_data = await cache.get(cache_key)
         if cached_data:
             return cached_data
@@ -195,6 +223,9 @@ class AniListClient:
                   format
                   episodes
                   duration
+                  coverImage {
+                    large
+                  }
                 }
               }
             }
@@ -208,6 +239,90 @@ class AniListClient:
         await cache.set(cache_key, data, ttl=86400)
 
         return data
+
+    async def get_media_details_batch(self, media_ids: List[int]) -> List[Dict[str, Any]]:
+        """Get details for multiple anime in a single request"""
+        # Check cache first
+        cached_results = []
+        ids_to_fetch = []
+        
+        for mid in media_ids:
+            cache_key = f"media_details_v2:{mid}"
+            cached = await cache.get(cache_key)
+            if cached:
+                cached_results.append(cached)
+            else:
+                ids_to_fetch.append(mid)
+        
+        if not ids_to_fetch:
+            return cached_results
+
+        # Fetch missing IDs
+        query = """
+        query ($ids: [Int], $page: Int) {
+          Page(page: $page, perPage: 50) {
+            pageInfo {
+              hasNextPage
+            }
+            media(id_in: $ids) {
+              id
+              title {
+                romaji
+                english
+              }
+              format
+              episodes
+              duration
+              coverImage {
+                large
+              }
+              relations {
+                edges {
+                  relationType
+                  node {
+                    id
+                    title {
+                      romaji
+                    }
+                    format
+                    episodes
+                    duration
+                    coverImage {
+                      large
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """
+        
+        fetched_results = []
+        page = 1
+        
+        while True:
+            variables = {"ids": ids_to_fetch, "page": page}
+            result = await self._make_request(query, variables)
+            
+            if "errors" in result:
+                print(f"Error fetching batch: {result['errors']}")
+                break
+                
+            data = result.get("data", {}).get("Page", {})
+            media_list = data.get("media", [])
+            fetched_results.extend(media_list)
+            
+            # Cache fetched items
+            for media in media_list:
+                cache_key = f"media_details_v2:{media['id']}"
+                await cache.set(cache_key, media, ttl=86400)
+            
+            if not data.get("pageInfo", {}).get("hasNextPage"):
+                break
+            page += 1
+
+        return cached_results + fetched_results
 
     async def add_to_list(
         self, media_id: int, status: str = "PLANNING"

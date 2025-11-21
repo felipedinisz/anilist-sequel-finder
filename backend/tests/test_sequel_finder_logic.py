@@ -83,13 +83,15 @@ async def test_find_missing_sequels_logic():
             }
 
         mock_instance.get_user_anime_list = AsyncMock(side_effect=side_effect)
+        mock_instance.get_public_user_profile = AsyncMock(return_value={"name": "testuser"})
 
         results = await find_missing_sequels(username)
+        missing_sequels = results["missing_sequels"]
 
-        assert len(results) == 1
-        assert results[0]["base_id"] == 1
-        assert results[0]["missing_id"] == 2
-        assert results[0]["missing_title"] == "Anime 2"
+        assert len(missing_sequels) == 1
+        assert missing_sequels[0]["base_id"] == 1
+        assert missing_sequels[0]["missing_id"] == 2
+        assert missing_sequels[0]["missing_title"] == "Anime 2"
 
 
 @pytest.mark.asyncio
@@ -147,12 +149,14 @@ async def test_find_missing_sequels_pagination():
             }
 
         mock_instance.get_user_anime_list = AsyncMock(side_effect=side_effect)
+        mock_instance.get_public_user_profile = AsyncMock(return_value={"name": "testuser"})
 
         results = await find_missing_sequels(username)
+        missing_sequels = results["missing_sequels"]
 
         # We just want to verify that it fetched both pages of completed anime
         # Since there are no sequels, results should be empty, but we can check call count
-        assert len(results) == 0
+        assert len(missing_sequels) == 0
 
         # Verify calls
         # Should call COMPLETED page 1, COMPLETED page 2, PLANNING page 1
@@ -238,28 +242,61 @@ async def test_find_missing_sequels_deep_search():
             }
 
         mock_instance.get_user_anime_list = AsyncMock(side_effect=list_side_effect)
+        mock_instance.get_public_user_profile = AsyncMock(return_value={"name": "testuser"})
 
-        # Mock get_media_details
-        async def details_side_effect(media_id):
-            if media_id == 2:
-                return anime_b_details
-            elif media_id == 3:
-                return anime_c_details
-            return {}
+        # Mock get_media_details_batch
+        async def batch_details_side_effect(media_ids):
+            results = []
+            for media_id in media_ids:
+                if media_id == 2:
+                    results.append(anime_b_details)
+                elif media_id == 3:
+                    results.append(anime_c_details)
+            return results
 
-        mock_instance.get_media_details = AsyncMock(side_effect=details_side_effect)
+        mock_instance.get_media_details_batch = AsyncMock(side_effect=batch_details_side_effect)
 
         results = await find_missing_sequels(username)
+        missing_sequels = results["missing_sequels"]
 
         # Should find B (from A) and C (from B)
-        assert len(results) == 2
+        assert len(missing_sequels) == 2
 
         # Check first result (Anime B)
-        res_b = next(r for r in results if r["missing_id"] == 2)
+        res_b = next(r for r in missing_sequels if r["missing_id"] == 2)
         assert res_b["base_id"] == 1
         assert res_b["missing_title"] == "Anime B"
 
         # Check second result (Anime C)
-        res_c = next(r for r in results if r["missing_id"] == 3)
+        res_c = next(r for r in missing_sequels if r["missing_id"] == 3)
         assert res_c["base_id"] == 2
         assert res_c["missing_title"] == "Anime C"
+
+
+@pytest.mark.asyncio
+async def test_find_missing_sequels_user_not_found():
+    username = "nonexistent"
+
+    with patch("app.services.sequel_finder.AniListClient") as MockClient:
+        mock_instance = MockClient.return_value
+
+        # Mock get_public_user_profile to raise error
+        mock_instance.get_public_user_profile.side_effect = Exception("User not found")
+
+        with pytest.raises(ValueError, match="User 'nonexistent' not found"):
+            await find_missing_sequels(username)
+
+
+@pytest.mark.asyncio
+async def test_find_missing_sequels_api_error():
+    username = "testuser"
+    
+    with patch("app.services.sequel_finder.AniListClient") as MockClient:
+        mock_instance = MockClient.return_value
+        mock_instance.get_public_user_profile = AsyncMock(return_value={"name": "testuser"})
+        
+        # Mock get_user_anime_list to raise generic error
+        mock_instance.get_user_anime_list = AsyncMock(side_effect=Exception("API Error"))
+        
+        with pytest.raises(Exception, match="API Error"):
+            await find_missing_sequels(username)
