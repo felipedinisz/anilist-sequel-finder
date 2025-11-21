@@ -131,7 +131,7 @@ class AniListClient:
         Returns:
             Anime list data
         """
-        cache_key = f"user_list_v3:{username}:{status}:{page}:{per_page}"
+        cache_key = f"user_list_v4:{username}:{status}:{page}:{per_page}"
         cached_data = await cache.get(cache_key)
         if cached_data:
             return cached_data
@@ -206,7 +206,7 @@ class AniListClient:
 
     async def get_media_details(self, media_id: int) -> Dict[str, Any]:
         """Get details for a specific anime"""
-        cache_key = f"media_details_v2:{media_id}"
+        cache_key = f"media_details_v3:{media_id}"
         cached_data = await cache.get(cache_key)
         if cached_data:
             return cached_data
@@ -271,7 +271,7 @@ class AniListClient:
         ids_to_fetch = []
         
         for mid in media_ids:
-            cache_key = f"media_details_v2:{mid}"
+            cache_key = f"media_details_v3:{mid}"
             cached = await cache.get(cache_key)
             if cached:
                 cached_results.append(cached)
@@ -350,7 +350,7 @@ class AniListClient:
             
             # Cache fetched items
             for media in media_list:
-                cache_key = f"media_details_v2:{media['id']}"
+                cache_key = f"media_details_v3:{media['id']}"
                 await cache.set(cache_key, media, ttl=86400)
             
             if not data.get("pageInfo", {}).get("hasNextPage"):

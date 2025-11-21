@@ -67,7 +67,7 @@ async def test_get_media_details_batch_caching():
     with patch("app.core.cache.cache.get", new_callable=AsyncMock) as mock_cache_get:
         # Mock cache hit for ID 1, miss for ID 2
         async def cache_side_effect(key):
-            if "media_details_v2:1" in key:
+            if "media_details_v3:1" in key:
                 return {"id": 1, "title": "Anime 1"}
             return None
         mock_cache_get.side_effect = cache_side_effect
