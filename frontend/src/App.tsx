@@ -3,7 +3,9 @@ import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-quer
 import { findSequels } from './api/client';
 import { SequelCard } from './components/SequelCard';
 import { UserBanner } from './components/UserBanner';
-import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown } from 'lucide-react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthCallback } from './pages/AuthCallback';
+import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown, LogIn, LogOut } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -16,6 +18,7 @@ const queryClient = new QueryClient({
 });
 
 function SequelFinder() {
+  const { user, login, logout, isAuthenticated } = useAuth();
   const [username, setUsername] = useState('');
   const [searchUser, setSearchUser] = useState('');
   const [minScore, setMinScore] = useState(0);
@@ -91,6 +94,33 @@ function SequelFinder() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm font-medium mb-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <Sparkles className="w-4 h-4" />
             <span>Discover what you missed</span>
+          </div>
+
+          {/* Auth Button */}
+          <div className="absolute top-4 right-4 md:top-8 md:right-8 z-50">
+            {isAuthenticated ? (
+              <div className="flex items-center gap-3 bg-gray-900/80 backdrop-blur-sm p-2 pr-4 rounded-full border border-gray-700">
+                {user?.avatar_url && (
+                  <img src={user.avatar_url} alt={user.username} className="w-8 h-8 rounded-full" />
+                )}
+                <span className="text-sm font-medium text-gray-200 hidden md:block">{user?.username}</span>
+                <button 
+                  onClick={logout}
+                  className="text-gray-400 hover:text-red-400 transition-colors"
+                  title="Logout"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={login}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-all shadow-lg shadow-blue-900/20"
+              >
+                <LogIn className="w-4 h-4" />
+                Login with AniList
+              </button>
+            )}
           </div>
           
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
@@ -322,9 +352,20 @@ function SequelFinder() {
 }
 
 function App() {
+  // Simple routing for callback
+  if (window.location.pathname === '/auth/callback') {
+    return (
+      <AuthProvider>
+        <AuthCallback />
+      </AuthProvider>
+    );
+  }
+
   return (
     <QueryClientProvider client={queryClient}>
-      <SequelFinder />
+      <AuthProvider>
+        <SequelFinder />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

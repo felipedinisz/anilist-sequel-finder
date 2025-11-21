@@ -1,6 +1,8 @@
 import type { Sequel } from '../api/client';
-import { Film, Star, Calendar, Tv } from 'lucide-react';
+import { Film, Star, Calendar, Tv, Plus, Check, Loader2 } from 'lucide-react';
 import { useState } from 'react';
+import { useAuth } from '../context/AuthContext';
+import { addToList } from '../api/client';
 
 interface SequelCardProps {
   sequel: Sequel;
@@ -9,6 +11,24 @@ interface SequelCardProps {
 
 export const SequelCard = ({ sequel, layout = 'grid' }: SequelCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { isAuthenticated } = useAuth();
+  const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
+
+  const handleAdd = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!isAuthenticated) return;
+    
+    setIsAdding(true);
+    try {
+      await addToList(sequel.missing_id);
+      setIsAdded(true);
+    } catch (error) {
+      console.error("Failed to add to list", error);
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   // Helper to format next airing date
   const getNextAiring = () => {
@@ -141,6 +161,31 @@ export const SequelCard = ({ sequel, layout = 'grid' }: SequelCardProps) => {
           >
             View
           </a>
+          {isAuthenticated && (
+            <button
+              onClick={handleAdd}
+              disabled={isAdding || isAdded}
+              className={`px-4 py-2 rounded-md transition-colors text-xs font-medium flex items-center gap-1 ${
+                isAdded 
+                  ? 'bg-green-500/20 text-green-400 cursor-default' 
+                  : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+              }`}
+            >
+              {isAdding ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : isAdded ? (
+                <>
+                  <Check className="w-3 h-3" />
+                  <span>Added</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3 h-3" />
+                  <span>Add</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     );
@@ -275,6 +320,31 @@ export const SequelCard = ({ sequel, layout = 'grid' }: SequelCardProps) => {
           )}
           
           <div className="flex gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={handleAdd}
+                disabled={isAdding || isAdded}
+                className={`text-xs px-3 py-1.5 rounded transition-all duration-300 flex items-center gap-1 ${
+                  isAdded 
+                    ? 'bg-green-500/20 text-green-400 cursor-default' 
+                    : 'bg-gray-800 hover:bg-gray-700 text-gray-300'
+                }`}
+              >
+                {isAdding ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : isAdded ? (
+                  <>
+                    <Check className="w-3 h-3" />
+                    <span>Added</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3 h-3" />
+                    <span>Add</span>
+                  </>
+                )}
+              </button>
+            )}
             <a 
               href={`https://anilist.co/anime/${sequel.missing_id}`}
               target="_blank"

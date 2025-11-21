@@ -109,18 +109,9 @@ async def auth_callback(code: str, db: AsyncSession = Depends(get_db)):
         }
     )
 
-    # Return user data with token
-    return UserWithToken(
-        id=user.id,  # type: ignore
-        anilist_id=user.anilist_id,  # type: ignore
-        username=user.username,  # type: ignore
-        avatar_url=user.avatar_url,  # type: ignore
-        created_at=user.created_at,  # type: ignore
-        updated_at=user.updated_at,  # type: ignore
-        last_sync=user.last_sync,  # type: ignore
-        settings=user.settings,  # type: ignore
-        token=jwt_token,
-        token_type="bearer",
+    # Redirect to frontend with token
+    return RedirectResponse(
+        url=f"{settings.FRONTEND_URL}/auth/callback?token={jwt_token}"
     )
 
 

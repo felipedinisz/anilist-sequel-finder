@@ -58,3 +58,11 @@ export const findSequels = async (username: string): Promise<FindSequelsResponse
   });
   return response.data;
 };
+
+export const addToList = async (mediaId: number, status: string = 'PLANNING') => {
+  const response = await apiClient.post('/sequels/add', {
+    media_id: mediaId,
+    status
+  });
+  return response.data;
+};
