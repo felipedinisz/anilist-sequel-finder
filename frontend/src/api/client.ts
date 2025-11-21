@@ -21,6 +21,11 @@ export interface Sequel {
   missing_score?: number;
   missing_episodes?: number;
   missing_year?: number;
+  missing_status?: string;
+  missing_next_airing?: {
+    episode: number;
+    airingAt: number;
+  };
   format: string;
   depth: number;
 }

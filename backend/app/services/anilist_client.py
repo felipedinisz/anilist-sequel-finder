@@ -155,8 +155,13 @@ class AniListClient:
                 format
                 episodes
                 duration
+                status
+                nextAiringEpisode {
+                  episode
+                  airingAt
+                }
                 coverImage {
-                  large
+                  extraLarge
                 }
                 relations {
                   edges {
@@ -170,8 +175,13 @@ class AniListClient:
                       episodes
                       seasonYear
                       averageScore
+                      status
+                      nextAiringEpisode {
+                        episode
+                        airingAt
+                      }
                       coverImage {
-                        large
+                        extraLarge
                       }
                     }
                   }
@@ -212,8 +222,13 @@ class AniListClient:
             format
             episodes
             duration
+            status
+            nextAiringEpisode {
+              episode
+              airingAt
+            }
             coverImage {
-              large
+              extraLarge
             }
             relations {
               edges {
@@ -227,8 +242,13 @@ class AniListClient:
                   episodes
                   seasonYear
                   averageScore
+                  status
+                  nextAiringEpisode {
+                    episode
+                    airingAt
+                  }
                   coverImage {
-                    large
+                    extraLarge
                   }
                 }
               }
@@ -277,8 +297,13 @@ class AniListClient:
               format
               episodes
               duration
+              status
+              nextAiringEpisode {
+                episode
+                airingAt
+              }
               coverImage {
-                large
+                extraLarge
               }
               relations {
                 edges {
@@ -292,8 +317,13 @@ class AniListClient:
                     episodes
                     seasonYear
                     averageScore
+                    status
+                    nextAiringEpisode {
+                      episode
+                      airingAt
+                    }
                     coverImage {
-                      large
+                      extraLarge
                     }
                   }
                 }
