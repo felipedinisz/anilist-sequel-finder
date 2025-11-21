@@ -1,11 +1,13 @@
 """
 FastAPI Application Entry Point
 """
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.api.v1 import auth
+from app.api.v1.sequels import router as sequels_router
 
 # Create FastAPI application
 app = FastAPI(
@@ -30,10 +32,14 @@ app.add_middleware(
 
 # Include routers
 app.include_router(
-    auth.router,
-    prefix=f"{settings.API_V1_PREFIX}/auth",
-    tags=["authentication"]
+    auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["authentication"]
 )
+
+# Sequels router
+app.include_router(
+    sequels_router, prefix=f"{settings.API_V1_PREFIX}/sequels", tags=["sequels"]
+)
+
 
 @app.get("/")
 async def root():
@@ -41,8 +47,9 @@ async def root():
     return {
         "message": "Welcome to AniList Sequel Finder API",
         "version": "1.0.0",
-        "docs": "/docs"
+        "docs": "/docs",
     }
+
 
 @app.get("/health")
 async def health_check():
@@ -52,9 +59,7 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(
-        "app.main:app",
-        host=settings.HOST,
-        port=settings.PORT,
-        reload=settings.DEBUG
+        "app.main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG
     )

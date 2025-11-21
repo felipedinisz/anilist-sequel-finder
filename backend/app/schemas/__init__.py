@@ -1,4 +1,5 @@
 """Schemas module exports"""
+
 from app.schemas.user import (
     User,
     UserBase,

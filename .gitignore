@@ -33,3 +33,14 @@ ENV/
 # OS
 .DS_Store
 Thumbs.db
+
+# Testing and Coverage
+.coverage
+.pytest_cache/
+.mypy_cache/
+htmlcov/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
