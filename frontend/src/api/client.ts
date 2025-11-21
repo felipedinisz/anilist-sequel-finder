@@ -1,0 +1,52 @@
+import axios from 'axios';
+
+const API_URL = 'http://localhost:8000/api/v1';
+
+export const apiClient = axios.create({
+  baseURL: API_URL,
+  timeout: 300000, // 5 minutos
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export interface Sequel {
+  base_id: number;
+  base_title: string;
+  base_status: string;
+  base_score?: number;
+  missing_id: number;
+  missing_title: string;
+  missing_cover?: string;
+  format: string;
+  depth: number;
+}
+
+export interface UserProfile {
+  id: number;
+  name: string;
+  avatar: {
+    large: string;
+  };
+  bannerImage?: string;
+  statistics: {
+    anime: {
+      count: number;
+      minutesWatched: number;
+      episodesWatched: number;
+    };
+  };
+}
+
+export interface FindSequelsResponse {
+  user: UserProfile;
+  missing_sequels: Sequel[];
+  count: number;
+}
+
+export const findSequels = async (username: string): Promise<FindSequelsResponse> => {
+  const response = await apiClient.get<FindSequelsResponse>('/sequels/find', {
+    params: { username },
+  });
+  return response.data;
+};
