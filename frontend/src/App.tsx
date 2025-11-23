@@ -7,7 +7,7 @@ import { UserBanner } from './components/UserBanner';
 import { Toast, type ToastType } from './components/Toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthCallback } from './pages/AuthCallback';
-import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown, LogOut, CheckSquare, Square, Plus, X } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown, LogOut, CheckSquare, Square, Plus, X, RefreshCw } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -42,11 +42,27 @@ function SequelFinder() {
     return saved ? new Set(JSON.parse(saved)) : new Set();
   });
   const [isBatchAdding, setIsBatchAdding] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: ToastType } | null>(null);
   const [addedIds, setAddedIds] = useState<Set<number>>(new Set());
 
   const showToast = (message: string, type: ToastType = 'info') => {
     setToast({ message, type });
+  };
+
+  const handleRefresh = async () => {
+    if (!searchUser) return;
+    setIsRefreshing(true);
+    try {
+      const newData = await findSequels(searchUser, true);
+      queryClient.setQueryData(['sequels', searchUser], newData);
+      showToast('List refreshed successfully', 'success');
+    } catch (error) {
+      console.error("Refresh failed", error);
+      showToast('Failed to refresh list', 'error');
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   // Save ignored IDs to localStorage
@@ -478,6 +494,15 @@ function SequelFinder() {
               {/* View Controls */}
               <div className="flex justify-end gap-4 mb-6">
                 <div className="flex items-center gap-2 bg-gray-900/50 p-1 rounded-lg border border-gray-800">
+                  <button
+                    onClick={handleRefresh}
+                    disabled={isRefreshing}
+                    className={`p-2 rounded-md transition-colors ${isRefreshing ? 'text-primary' : 'text-gray-400 hover:text-white hover:bg-gray-800'}`}
+                    title="Refresh List"
+                  >
+                    <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  </button>
+                  <div className="w-px h-4 bg-gray-700 mx-1"></div>
                   <button
                     onClick={() => setSortBy('score')}
                     className={`p-2 rounded-md transition-colors ${sortBy === 'score' ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white'}`}

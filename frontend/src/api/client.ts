@@ -52,9 +52,12 @@ export interface FindSequelsResponse {
   count: number;
 }
 
-export const findSequels = async (username: string): Promise<FindSequelsResponse> => {
+export const findSequels = async (username: string, forceRefresh: boolean = false): Promise<FindSequelsResponse> => {
   const response = await apiClient.get<FindSequelsResponse>('/sequels/find', {
-    params: { username },
+    params: { 
+      username,
+      force_refresh: forceRefresh 
+    },
   });
   return response.data;
 };

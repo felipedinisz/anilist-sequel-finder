@@ -10,7 +10,7 @@ from app.services.anilist_client import AniListClient
 
 
 async def find_missing_sequels(
-    username: str, access_token: Optional[str] = None
+    username: str, access_token: Optional[str] = None, force_refresh: bool = False
 ) -> List[Dict[str, Any]]:
     """Find missing sequels for a given username.
 
@@ -21,6 +21,9 @@ async def find_missing_sequels(
     - Recursively search for sequels of missing sequels (Deep Search)
     """
     client = AniListClient(access_token)
+
+    if force_refresh:
+        await client.invalidate_user_lists(username)
 
     # helper to fetch all pages for a given status
     # Semaphore to limit concurrent requests to avoid hitting rate limits too hard
@@ -48,6 +51,10 @@ async def find_missing_sequels(
                     has_next = page_info.get("hasNextPage")
                     print(f"[{status}] Page {page}: {len(media_list)} items. Next: {has_next}")
                     
+                    # Safety check: if no items returned, stop to avoid infinite loops
+                    if not media_list:
+                        break
+
                     if not has_next:
                         break
                     page += 1
