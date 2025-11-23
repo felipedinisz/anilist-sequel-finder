@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
-import { apiClient } from '../api/client';
+import { apiClient, API_URL } from '../api/client';
 
 interface User {
   id: number;
@@ -45,7 +45,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [token]);
 
   const login = () => {
-    window.location.href = 'http://localhost:8000/api/v1/auth/login';
+    // Ensure we don't have double slashes if API_URL ends with /
+    const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
+    window.location.href = `${baseUrl}/auth/login`;
   };
 
   const logout = () => {

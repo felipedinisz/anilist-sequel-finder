@@ -4,6 +4,9 @@ FastAPI Application Entry Point
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
 
 from app.core.config import settings
 from app.api.v1 import auth
@@ -21,15 +24,11 @@ app = FastAPI(
 # Using allow_origin_regex to allow all local origins for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex="https?://.*",
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Note: Static files and templates commented out until frontend is ready
-# app.mount("/static", StaticFiles(directory="../frontend/static"), name="static")
-# templates = Jinja2Templates(directory="../frontend/templates")
 
 # Include routers
 app.include_router(
@@ -41,16 +40,34 @@ app.include_router(
     sequels_router, prefix=f"{settings.API_V1_PREFIX}/sequels", tags=["sequels"]
 )
 
-
-@app.get("/")
-async def root():
-    """Root endpoint"""
-    return {
-        "message": "Welcome to AniList Sequel Finder API",
-        "version": "1.0.0",
-        "docs": "/docs",
-    }
-
+# Serve static files (Frontend)
+# We expect the frontend build to be in the 'static' directory
+static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+if os.path.exists(static_dir):
+    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
+    
+    # Catch-all for SPA
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # If API request, return 404 (should be handled by routers above, but just in case)
+        if full_path.startswith("api/"):
+            return {"error": "Not found"}, 404
+            
+        # Serve index.html for any other path (SPA routing)
+        index_path = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"error": "Frontend not found"}, 404
+else:
+    @app.get("/")
+    async def root():
+        """Root endpoint (Development mode)"""
+        return {
+            "message": "Welcome to AniList Sequel Finder API",
+            "version": "1.0.0",
+            "docs": "/docs",
+            "note": "Frontend not served in development mode (or static folder missing)"
+        }
 
 @app.get("/health")
 async def health_check():

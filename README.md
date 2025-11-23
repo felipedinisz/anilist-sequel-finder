@@ -62,7 +62,27 @@ npm run dev
 ```
 The frontend will start at `http://localhost:5173`.
 
-## 📖 Usage
+## � Deployment (Docker)
+
+The project is configured to be deployed as a single container (Frontend served by Backend).
+
+### 1. Build and Run with Docker
+
+```bash
+docker build -t anilist-sequel-finder .
+docker run -p 8000:8000 -e ANILIST_CLIENT_ID=your_id -e FRONTEND_URL=http://localhost:8000 anilist-sequel-finder
+```
+
+### 2. Environment Variables
+
+When deploying (e.g., on Render, Railway, Fly.io), set these variables:
+
+- `ANILIST_CLIENT_ID`: Your AniList Client ID (Required)
+- `FRONTEND_URL`: The URL where your app is hosted (e.g., `https://myapp.onrender.com`)
+- `SECRET_KEY`: A random secret string for security
+- `JWT_SECRET_KEY`: A random secret string for JWT tokens
+
+## �📖 Usage
 
 1. Open the frontend in your browser.
 2. Click **"Login with AniList"** to authenticate (optional, but required for adding animes).
