@@ -10,25 +10,21 @@ RUN npm run build
 
 # Stage 2: Build Backend & Serve
 FROM python:3.10-slim
-WORKDIR /app/backend
+WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Copy Backend Code
+# Copy entire backend (including app folder)
 COPY backend/ .
 
-# Copy Frontend Build to Static Folder (one level up from backend)
-COPY --from=frontend-build /app/frontend/dist /app/static
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Set working directory for app to find modules correctly
-WORKDIR /app
+# Copy Frontend Build to Static Folder (from stage 1)
+COPY --from=frontend-build /app/frontend/dist ./static
 
 # Environment Variables
 ENV PYTHONPATH=/app
