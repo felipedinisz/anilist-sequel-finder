@@ -379,3 +379,9 @@ class AniListClient:
         """
         variables = {"mediaId": media_id, "status": status}
         return await self._make_request(mutation, variables)
+
+    async def invalidate_user_lists(self, username: str):
+        """Invalidate cached user lists for a username"""
+        # Pattern matches: user_list_v4:{username}:*
+        await cache.delete_pattern(f"user_list_v4:{username}:*")
+

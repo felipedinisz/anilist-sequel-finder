@@ -91,6 +91,29 @@ class CacheService:
             for file_path in self.cache_dir.glob("*.cache"):
                 os.remove(file_path)
 
+    async def delete_pattern(self, pattern: str):
+        """Delete keys matching pattern (e.g. 'prefix:*')"""
+        if self.use_redis and self.redis:
+            keys = []
+            async for key in self.redis.scan_iter(match=pattern):
+                keys.append(key)
+            if keys:
+                await self.redis.delete(*keys)
+        else:
+            # File cache: simple prefix matching
+            # We assume the pattern ends with * and we match the sanitized prefix
+            prefix = pattern.rstrip("*")
+            safe_prefix = "".join(
+                c if c.isalnum() or c in "._-" else "_" for c in prefix
+            )
+            
+            for file_path in self.cache_dir.glob(f"{safe_prefix}*.cache"):
+                try:
+                    os.remove(file_path)
+                except OSError:
+                    pass
+
+
 
 # Global cache instance
 cache = CacheService()

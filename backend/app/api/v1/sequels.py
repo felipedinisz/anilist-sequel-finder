@@ -45,6 +45,9 @@ async def add_to_list(
         if "errors" in result:
             raise HTTPException(status_code=400, detail=result["errors"][0]["message"])
             
+        # Invalidate cache for this user so subsequent searches are fresh
+        await client.invalidate_user_lists(current_user.username)
+
         return result["data"]["SaveMediaListEntry"]
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
