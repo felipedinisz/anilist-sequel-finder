@@ -43,8 +43,10 @@ app.include_router(
 # Serve static files (Frontend)
 # We expect the frontend build to be in the 'static' directory
 # In Docker, this is /app/static
-# In local dev, it might be ../frontend/dist if we wanted to serve it, but we usually don't.
-static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
+# In local dev, static folder won't exist and API will run without serving frontend
+import sys
+app_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))  # /app
+static_dir = os.path.join(app_root, "static")
 
 # Check if static directory exists and has index.html
 has_static = os.path.exists(static_dir) and os.path.exists(os.path.join(static_dir, "index.html"))
