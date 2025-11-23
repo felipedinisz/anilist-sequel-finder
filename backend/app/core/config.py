@@ -2,7 +2,9 @@
 Core configuration using Pydantic Settings
 """
 
-from typing import List
+import json
+import os
+from typing import Any
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import field_validator
 
@@ -10,7 +12,7 @@ from pydantic import field_validator
 class Settings(BaseSettings):
     """Application settings"""
 
-    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    model_config = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
     # App
     APP_NAME: str = "AniList Sequel Finder"
@@ -39,15 +41,8 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
 
-    # CORS
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:8000",
-        "http://localhost:5173",
-        "http://127.0.0.1:3000",
-        "http://127.0.0.1:8000",
-        "http://127.0.0.1:5173",
-    ]  # Will be overridden by env var in production
+    # CORS - stored as string by default, parsed to list after initialization
+    CORS_ORIGINS: Any = "http://localhost:3000,http://localhost:8000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:8000,http://127.0.0.1:5173"
 
     # Cache
     CACHE_DIR: str = ".cache"
@@ -62,23 +57,65 @@ class Settings(BaseSettings):
     # Frontend
     FRONTEND_URL: str = "http://localhost:5173"
 
-    @field_validator("CORS_ORIGINS", mode="before")
+    @field_validator("CORS_ORIGINS", mode="wrap")
     @classmethod
-    def parse_cors_origins(cls, v):
-        if isinstance(v, str):
-            # Handle both JSON array format and comma-separated format
-            v = v.strip()
-            if v.startswith("["):
-                # Try to parse as JSON
-                import json
+    def parse_cors_origins(cls, v, handler):
+        """Parse CORS_ORIGINS from string to list"""
+        try:
+            # Call the default validator
+            result = handler(v)
+        except Exception:
+            # If default validation fails, use v as-is
+            result = v
+        
+        # Now parse the result
+        if isinstance(result, str):
+            cors_str = result.strip()
+            # Try to parse as JSON array first
+            if cors_str.startswith("["):
                 try:
-                    return json.loads(v)
-                except json.JSONDecodeError:
+                    parsed = json.loads(cors_str)
+                    if isinstance(parsed, list):
+                        return parsed
+                except (json.JSONDecodeError, TypeError, ValueError):
                     pass
             # Parse as comma-separated
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
+            return [origin.strip() for origin in cors_str.split(",") if origin.strip()]
+        elif isinstance(result, list):
+            # Already a list, ensure all items are strings
+            return [str(origin) for origin in result]
+        else:
+            # Fallback: convert to list with single item
+            return [str(result)]
+
+
+# Load CORS_ORIGINS from environment if set, otherwise use default
+_cors_env = os.getenv("CORS_ORIGINS")
+if _cors_env:
+    # Parse it immediately to avoid Pydantic issues
+    if _cors_env.strip().startswith("["):
+        try:
+            _cors_list = json.loads(_cors_env.strip())
+        except (json.JSONDecodeError, TypeError, ValueError):
+            _cors_list = [origin.strip() for origin in _cors_env.split(",") if origin.strip()]
+    else:
+        _cors_list = [origin.strip() for origin in _cors_env.split(",") if origin.strip()]
+    
+    # Temporarily remove it from environment so Settings doesn't try to parse it
+    os.environ.pop("CORS_ORIGINS", None)
 
 
 # Global settings instance
-settings = Settings()
+try:
+    settings = Settings()
+    # If we pre-parsed CORS_ORIGINS, use it
+    if _cors_env:
+        settings.CORS_ORIGINS = _cors_list
+except Exception as e:
+    print(f"Warning: Failed to load settings: {e}")
+    # Create a minimal settings object
+    settings = Settings(
+        SECRET_KEY="dev-key",
+        ANILIST_CLIENT_ID="dev-id",
+        JWT_SECRET_KEY="dev-key",
+    )
