@@ -43,8 +43,12 @@ app.include_router(
 # Serve static files (Frontend)
 # We expect the frontend build to be in the 'static' directory
 static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+
+# Always try to serve static files if directory exists
 if os.path.exists(static_dir):
-    app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
+    # Mount assets folder
+    if os.path.exists(os.path.join(static_dir, "assets")):
+        app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
     
     # Catch-all for SPA
     @app.get("/{full_path:path}")
@@ -57,7 +61,16 @@ if os.path.exists(static_dir):
         index_path = os.path.join(static_dir, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-        return {"error": "Frontend not found"}, 404
+        return {"error": "Frontend index.html not found"}, 404
+
+    # Explicit root handler for SPA
+    @app.get("/")
+    async def root_spa():
+        index_path = os.path.join(static_dir, "index.html")
+        if os.path.exists(index_path):
+            return FileResponse(index_path)
+        return {"error": "Frontend index.html not found"}, 404
+
 else:
     @app.get("/")
     async def root():
