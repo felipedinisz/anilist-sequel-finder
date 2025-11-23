@@ -397,7 +397,7 @@ function SequelFinder() {
           {data && (
             <div className="animate-in fade-in slide-in-from-bottom-8 duration-700">
               {/* User Banner */}
-              <UserBanner user={data.user} missingCount={data.count} />
+              <UserBanner user={data.user} missingCount={data.count - addedIds.size} />
 
               <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between border-b border-gray-800 pb-6 gap-6 mb-8">
                 <div className="flex items-center gap-4">

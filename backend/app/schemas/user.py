@@ -51,3 +51,8 @@ class UserWithToken(User):
 
     token: str
     token_type: str = "bearer"
+
+
+class TokenVerificationRequest(BaseModel):
+    """Schema for verifying AniList token"""
+    access_token: str

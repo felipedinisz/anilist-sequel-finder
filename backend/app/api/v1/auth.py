@@ -11,7 +11,7 @@ from app.core.config import settings
 from app.core.security import create_access_token
 from app.db.session import get_db
 from app.models.user import User as UserModel
-from app.schemas.user import UserWithToken
+from app.schemas.user import UserWithToken, TokenVerificationRequest
 from app.services.anilist_client import AniListClient
 
 router = APIRouter()
@@ -20,17 +20,82 @@ router = APIRouter()
 @router.get("/login")
 async def login():
     """
-    Initiate AniList OAuth login
+    Initiate AniList OAuth login (Implicit Grant)
 
     Redirects user to AniList authorization page
     """
+    # For Implicit Grant, we redirect to frontend callback
+    redirect_uri = f"{settings.FRONTEND_URL}/auth/callback"
+    
     auth_url = (
         f"{settings.ANILIST_AUTH_URL}"
         f"?client_id={settings.ANILIST_CLIENT_ID}"
-        f"&redirect_uri={settings.ANILIST_REDIRECT_URI}"
-        f"&response_type=code"
+        f"&redirect_uri={redirect_uri}"
+        f"&response_type=token"
     )
     return RedirectResponse(url=auth_url)
+
+
+@router.post("/verify-token", response_model=UserWithToken)
+async def verify_token(request: TokenVerificationRequest, db: AsyncSession = Depends(get_db)):
+    """
+    Verify AniList access token and create/update user session
+    """
+    access_token = request.access_token
+
+    # Get user info from AniList to validate token
+    try:
+        anilist_client = AniListClient(access_token)
+        user_info = await anilist_client.get_user_info()
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid AniList token",
+        )
+
+    # Check if user exists in database
+    from sqlalchemy import select
+
+    result = await db.execute(
+        select(UserModel).where(UserModel.anilist_id == user_info["id"])
+    )
+    user = result.scalar_one_or_none()
+
+    if not user:
+        # Create new user
+        user = UserModel(
+            anilist_id=user_info["id"],
+            username=user_info["name"],
+            avatar_url=(
+                user_info["avatar"]["large"] if user_info.get("avatar") else None
+            ),
+            access_token=access_token,
+            settings={},
+        )
+        db.add(user)
+    else:
+        # Update existing user
+        user.access_token = access_token
+        user.username = user_info["name"]
+        user.avatar_url = user_info["avatar"]["large"] if user_info.get("avatar") else None  # type: ignore
+
+    await db.commit()
+    await db.refresh(user)
+
+    # Create JWT token
+    jwt_token = create_access_token(
+        data={
+            "sub": str(user.id),
+            "anilist_id": user.anilist_id,
+            "username": user.username,
+        }
+    )
+
+    return {
+        **user.__dict__,
+        "token": jwt_token,
+        "token_type": "bearer"
+    }
 
 
 @router.get("/callback")

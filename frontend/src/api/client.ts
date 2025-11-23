@@ -69,3 +69,10 @@ export const addToList = async (mediaId: number, status: string = 'PLANNING') =>
   });
   return response.data;
 };
+
+export const verifyToken = async (accessToken: string) => {
+  const response = await apiClient.post('/auth/verify-token', {
+    access_token: accessToken
+  });
+  return response.data;
+};
