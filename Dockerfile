@@ -2,11 +2,11 @@
 FROM node:18-alpine as frontend-build
 WORKDIR /app/frontend
 COPY frontend/package*.json ./
-RUN npm install
+RUN npm ci --prefer-offline --no-audit
 COPY frontend/ ./
 # Set API URL to relative path for production build
 ENV VITE_API_URL=/api/v1
-RUN npm run build
+RUN npm run build && ls -la dist/
 
 # Stage 2: Build Backend & Serve
 FROM python:3.10-slim
@@ -23,13 +23,20 @@ COPY backend/ .
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Create static directory first
+RUN mkdir -p /app/static
+
 # Copy Frontend Build to Static Folder (from stage 1)
-COPY --from=frontend-build /app/frontend/dist ./static
+COPY --from=frontend-build /app/frontend/dist /app/static/
+RUN ls -la /app/static/ || echo "Warning: static directory is empty"
 
 # Environment Variables
 ENV PYTHONPATH=/app
 ENV PORT=8000
 ENV HOST=0.0.0.0
+
+# Verify frontend files exist
+RUN test -f /app/static/index.html || (echo "ERROR: Frontend build not found at /app/static/index.html" && exit 1)
 
 # Run the application using the PORT environment variable (default 8000)
 CMD sh -c "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"
