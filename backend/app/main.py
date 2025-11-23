@@ -42,14 +42,23 @@ app.include_router(
 
 # Serve static files (Frontend)
 # We expect the frontend build to be in the 'static' directory
-static_dir = os.path.join(os.path.dirname(__file__), "..", "static")
+# In Docker, this is /app/static
+# In local dev, it might be ../frontend/dist if we wanted to serve it, but we usually don't.
+static_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static")
 
-# Always try to serve static files if directory exists
-if os.path.exists(static_dir):
+# Check if static directory exists and has index.html
+has_static = os.path.exists(static_dir) and os.path.exists(os.path.join(static_dir, "index.html"))
+
+if has_static:
     # Mount assets folder
     if os.path.exists(os.path.join(static_dir, "assets")):
         app.mount("/assets", StaticFiles(directory=os.path.join(static_dir, "assets")), name="assets")
     
+    # Explicit root handler for SPA
+    @app.get("/")
+    async def root_spa():
+        return FileResponse(os.path.join(static_dir, "index.html"))
+
     # Catch-all for SPA
     @app.get("/{full_path:path}")
     async def serve_spa(full_path: str):
@@ -59,27 +68,19 @@ if os.path.exists(static_dir):
             
         # Serve index.html for any other path (SPA routing)
         index_path = os.path.join(static_dir, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path)
-        return {"error": "Frontend index.html not found"}, 404
-
-    # Explicit root handler for SPA
-    @app.get("/")
-    async def root_spa():
-        index_path = os.path.join(static_dir, "index.html")
-        if os.path.exists(index_path):
-            return FileResponse(index_path)
-        return {"error": "Frontend index.html not found"}, 404
+        return FileResponse(index_path)
 
 else:
     @app.get("/")
     async def root():
-        """Root endpoint (Development mode)"""
+        """Root endpoint (Development mode or missing build)"""
         return {
             "message": "Welcome to AniList Sequel Finder API",
             "version": "1.0.0",
             "docs": "/docs",
-            "note": "Frontend not served in development mode (or static folder missing)"
+            "status": "Frontend build not found",
+            "search_path": static_dir,
+            "cwd": os.getcwd()
         }
 
 @app.get("/health")
