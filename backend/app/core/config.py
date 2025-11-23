@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     # App
     APP_NAME: str = "AniList Sequel Finder"
     APP_ENV: str = "development"
-    DEBUG: bool = True
+    DEBUG: bool = False  # Safer default for production
     SECRET_KEY: str
     API_V1_PREFIX: str = "/api/v1"
 
@@ -24,12 +24,12 @@ class Settings(BaseSettings):
     PORT: int = 8000
 
     # Database
-    DATABASE_URL: str
+    DATABASE_URL: str = "sqlite+aiosqlite:///./app.db"
 
     # AniList OAuth
     ANILIST_CLIENT_ID: str
-    ANILIST_CLIENT_SECRET: str
-    ANILIST_REDIRECT_URI: str
+    ANILIST_CLIENT_SECRET: str = ""  # Optional for Implicit Grant flow
+    ANILIST_REDIRECT_URI: str = "http://localhost:5173/auth/callback"  # Default for dev
     ANILIST_AUTH_URL: str = "https://anilist.co/api/v2/oauth/authorize"
     ANILIST_TOKEN_URL: str = "https://anilist.co/api/v2/oauth/token"
     ANILIST_API_URL: str = "https://graphql.anilist.co"
@@ -47,7 +47,7 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3000",
         "http://127.0.0.1:8000",
         "http://127.0.0.1:5173",
-    ]
+    ]  # Will be overridden by env var in production
 
     # Cache
     CACHE_DIR: str = ".cache"
