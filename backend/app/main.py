@@ -2,16 +2,35 @@
 FastAPI Application Entry Point
 """
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.exceptions import RequestValidationError
+from fastapi.responses import FileResponse
 import os
 
 from app.core.config import settings
 from app.api.v1 import auth
 from app.api.v1.sequels import router as sequels_router
+
+
+# Middleware to handle OPTIONS preflight CORS requests
+class OptionsMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            origin = request.headers.get("origin", "*")
+            return Response(
+                status_code=200,
+                headers={
+                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                    "Access-Control-Allow-Headers": "*",
+                    "Access-Control-Max-Age": "3600",
+                }
+            )
+        return await call_next(request)
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -21,30 +40,18 @@ app = FastAPI(
     description="Find missing anime sequels from your AniList account",
 )
 
-# Configure CORS - MUST be added before routers
+# Add OPTIONS middleware FIRST (before CORS middleware)
+app.add_middleware(OptionsMiddleware)
+
+# Configure CORS
+# Using allow_origin_regex to allow all local origins for development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
-    max_age=3600,
 )
-
-# Handle validation errors with CORS headers
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    """Handle validation errors and preserve CORS headers"""
-    origin = request.headers.get("origin")
-    
-    return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors()},
-        headers={
-            "access-control-allow-origin": origin if origin in settings.CORS_ORIGINS else settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "*",
-            "access-control-allow-credentials": "true",
-        }
-    )
 
 # Include routers
 app.include_router(
@@ -105,22 +112,6 @@ else:
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
-
-
-@app.get("/debug/config")
-async def debug_config():
-    """Debug endpoint - shows current configuration"""
-    if not settings.DEBUG:
-        return {"error": "Debug endpoint only available in development mode"}, 403
-    
-    return {
-        "cors_origins": settings.CORS_ORIGINS,
-        "cors_origins_type": str(type(settings.CORS_ORIGINS)),
-        "app_env": settings.APP_ENV,
-        "debug": settings.DEBUG,
-        "static_dir": static_dir,
-        "has_static": has_static,
-    }
 
 
 if __name__ == "__main__":
