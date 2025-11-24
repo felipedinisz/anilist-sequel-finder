@@ -20,14 +20,14 @@ app = FastAPI(
     description="Find missing anime sequels from your AniList account",
 )
 
-# Configure CORS
-# Using allow_origin_regex to allow all local origins for development
+# Configure CORS - MUST be added before routers
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
+    max_age=3600,
 )
 
 # Include routers
@@ -89,6 +89,22 @@ else:
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy"}
+
+
+@app.get("/debug/config")
+async def debug_config():
+    """Debug endpoint - shows current configuration"""
+    if not settings.DEBUG:
+        return {"error": "Debug endpoint only available in development mode"}, 403
+    
+    return {
+        "cors_origins": settings.CORS_ORIGINS,
+        "cors_origins_type": str(type(settings.CORS_ORIGINS)),
+        "app_env": settings.APP_ENV,
+        "debug": settings.DEBUG,
+        "static_dir": static_dir,
+        "has_static": has_static,
+    }
 
 
 if __name__ == "__main__":

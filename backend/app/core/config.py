@@ -113,9 +113,21 @@ try:
         settings.CORS_ORIGINS = _cors_list
 except Exception as e:
     print(f"Warning: Failed to load settings: {e}")
+    import traceback
+    traceback.print_exc()
     # Create a minimal settings object
     settings = Settings(
         SECRET_KEY="dev-key",
         ANILIST_CLIENT_ID="dev-id",
         JWT_SECRET_KEY="dev-key",
     )
+
+# Ensure CORS_ORIGINS is always a list
+if not isinstance(settings.CORS_ORIGINS, list):
+    print(f"WARNING: CORS_ORIGINS is not a list! Type: {type(settings.CORS_ORIGINS)}, Value: {settings.CORS_ORIGINS}")
+    if isinstance(settings.CORS_ORIGINS, str):
+        settings.CORS_ORIGINS = [origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()]
+    else:
+        settings.CORS_ORIGINS = ["http://localhost:3000", "http://localhost:8000"]
+
+print(f"✓ CORS_ORIGINS configured: {settings.CORS_ORIGINS}")
