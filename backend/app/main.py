@@ -2,10 +2,11 @@
 FastAPI Application Entry Point
 """
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.exceptions import RequestValidationError
 import os
 
 from app.core.config import settings
@@ -29,6 +30,21 @@ app.add_middleware(
     allow_headers=["*"],
     max_age=3600,
 )
+
+# Handle validation errors with CORS headers
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Handle validation errors and preserve CORS headers"""
+    origin = request.headers.get("origin")
+    
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+        headers={
+            "access-control-allow-origin": origin if origin in settings.CORS_ORIGINS else settings.CORS_ORIGINS[0] if settings.CORS_ORIGINS else "*",
+            "access-control-allow-credentials": "true",
+        }
+    )
 
 # Include routers
 app.include_router(
