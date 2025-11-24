@@ -14,6 +14,12 @@ from app.schemas.sequel import AddToListRequest
 router = APIRouter()
 
 
+@router.options("/find", include_in_schema=False)
+async def options_find():
+    """CORS preflight for /find"""
+    return {}
+
+
 @router.get("/find")
 async def find_sequels(
     username: str = Query(..., description="AniList username"),
@@ -31,6 +37,12 @@ async def find_sequels(
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.options("/add", include_in_schema=False)
+async def options_add():
+    """CORS preflight for /add"""
+    return {}
 
 
 @router.post("/add")
