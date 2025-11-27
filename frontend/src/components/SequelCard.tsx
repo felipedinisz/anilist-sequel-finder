@@ -72,7 +72,7 @@ export const SequelCard = ({
   `;
 
   const listContainerClasses = `
-    group bg-card rounded-lg border transition-all duration-500 flex items-center p-4 gap-4 hover:bg-gray-900/50
+    group bg-card rounded-lg border transition-all duration-500 flex items-center p-3 sm:p-4 gap-3 sm:gap-4 hover:bg-gray-900/50
     ${isSelected ? 'border-primary bg-primary/5' : 'border-gray-800 hover:border-primary/50'}
     ${isIgnored ? 'grayscale opacity-50 hover:grayscale-0 hover:opacity-100' : ''}
   `;
@@ -217,24 +217,33 @@ export const SequelCard = ({
             href={`https://anilist.co/anime/${sequel.missing_id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-lg font-bold text-gray-100 group-hover:text-primary truncate block"
+            className="text-base sm:text-lg font-bold text-gray-100 group-hover:text-primary truncate block"
           >
             {sequel.missing_title}
           </a>
           
-          <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-gray-500">
             <span className={statusColor}>{sequel.missing_status?.replace(/_/g, ' ') || 'Unknown Status'}</span>
+            
+            {/* Mobile Score Display */}
+            {sequel.missing_score && (
+              <span className="flex sm:hidden items-center gap-1 text-yellow-500">
+                <Star className="w-3 h-3 fill-yellow-500" />
+                {sequel.missing_score}%
+              </span>
+            )}
+
             {getNextAiring() && (
               <>
-                <span>•</span>
+                <span className="hidden sm:inline">•</span>
                 <span className="text-blue-400">Next: {getNextAiring()}</span>
               </>
             )}
           </div>
         </div>
         
-        <div className="flex items-center gap-6 text-sm text-gray-400">
-          <div className="flex flex-col items-end gap-1">
+        <div className="flex items-center gap-2 sm:gap-6 text-sm text-gray-400 ml-auto">
+          <div className="hidden sm:flex flex-col items-end gap-1">
             {sequel.missing_score ? (
               <div className="flex items-center gap-1.5">
                 <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
@@ -254,7 +263,7 @@ export const SequelCard = ({
             href={`https://anilist.co/anime/${sequel.missing_id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-gray-800 hover:bg-primary hover:text-white text-gray-300 px-4 py-2 rounded-md transition-colors text-xs font-medium"
+            className="hidden sm:block bg-gray-800 hover:bg-primary hover:text-white text-gray-300 px-4 py-2 rounded-md transition-colors text-xs font-medium"
           >
             View
           </a>
