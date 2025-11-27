@@ -8,7 +8,7 @@ import { Toast, type ToastType } from './components/Toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthCallback } from './pages/AuthCallback';
 import { Help } from './pages/Help';
-import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown, LogOut, CheckSquare, Square, Plus, X, RefreshCw, HelpCircle } from 'lucide-react';
+import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown, LogOut, CheckSquare, Square, Plus, X, RefreshCw, HelpCircle, Github } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -218,6 +218,16 @@ function SequelFinder() {
       {/* Navigation Bar */}
       <nav className="absolute top-0 w-full z-50 px-6 py-6">
         <div className="max-w-7xl mx-auto flex justify-end items-center gap-4">
+           <a
+             href="https://github.com/felipedinisz/anilist-sequel-finder"
+             target="_blank"
+             rel="noopener noreferrer"
+             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 animate-in fade-in slide-in-from-top-4 duration-700"
+           >
+             <Github className="w-5 h-5" />
+             <span className="hidden sm:inline font-medium">GitHub</span>
+           </a>
+
            <a
              href="/help"
              className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 animate-in fade-in slide-in-from-top-4 duration-700"
