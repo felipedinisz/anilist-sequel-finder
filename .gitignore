@@ -44,3 +44,7 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+
+# Deployment docs and secrets
+DEPLOY.md
+.env.production

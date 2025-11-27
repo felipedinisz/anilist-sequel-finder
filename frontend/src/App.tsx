@@ -7,7 +7,8 @@ import { UserBanner } from './components/UserBanner';
 import { Toast, type ToastType } from './components/Toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthCallback } from './pages/AuthCallback';
-import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown, LogOut, CheckSquare, Square, Plus, X, RefreshCw } from 'lucide-react';
+import { Help } from './pages/Help';
+import { Search, Loader2, AlertCircle, Filter, Sparkles, Star, LayoutGrid, List, Image as ImageIcon, ArrowUpDown, LogOut, CheckSquare, Square, Plus, X, RefreshCw, HelpCircle } from 'lucide-react';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -216,7 +217,15 @@ function SequelFinder() {
     <div className="min-h-screen bg-[#0B1622] text-gray-100 font-sans selection:bg-primary/30">
       {/* Navigation Bar */}
       <nav className="absolute top-0 w-full z-50 px-6 py-6">
-        <div className="max-w-7xl mx-auto flex justify-end items-center">
+        <div className="max-w-7xl mx-auto flex justify-end items-center gap-4">
+           <a
+             href="/help"
+             className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors px-4 py-2 rounded-full hover:bg-white/5 animate-in fade-in slide-in-from-top-4 duration-700"
+           >
+             <HelpCircle className="w-5 h-5" />
+             <span className="hidden sm:inline font-medium">Need Help?</span>
+           </a>
+
            {/* Auth Button */}
            <div>
              {isAuthenticated ? (
@@ -233,6 +242,14 @@ function SequelFinder() {
                     <span className="text-sm font-bold text-gray-200 leading-none mt-1">{user?.username}</span>
                  </div>
                  <div className="h-8 w-px bg-gray-700/50 mx-2 hidden md:block"></div>
+                 <div className="flex flex-col items-end mr-2">
+                   <button 
+                     onClick={() => { logout(); login(true); }}
+                     className="text-[10px] text-gray-500 hover:text-blue-400 underline transition-colors"
+                   >
+                     Not you?
+                   </button>
+                 </div>
                  <button 
                    onClick={logout}
                    className="p-2 hover:bg-red-500/10 text-gray-400 hover:text-red-400 rounded-full transition-all"
@@ -243,7 +260,7 @@ function SequelFinder() {
                </div>
              ) : (
                <button
-                 onClick={login}
+                 onClick={() => login(false)}
                  className="group relative flex items-center gap-3 bg-[#3DB4F2] hover:bg-[#3DB4F2]/90 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-lg shadow-blue-500/20 hover:shadow-blue-500/40 hover:-translate-y-0.5 animate-in fade-in slide-in-from-top-4 duration-700"
                >
                  <div className="absolute inset-0 bg-white/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -268,7 +285,7 @@ function SequelFinder() {
             <span>Discover what you missed</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-white via-blue-100 to-blue-200 drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
+          <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white drop-shadow-sm animate-in fade-in slide-in-from-bottom-6 duration-700 delay-100">
             AniList Sequel Finder
           </h1>
           
@@ -609,6 +626,10 @@ function App() {
         <AuthCallback />
       </AuthProvider>
     );
+  }
+
+  if (window.location.pathname === '/help') {
+    return <Help />;
   }
 
   return (

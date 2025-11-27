@@ -377,7 +377,7 @@ export const SequelCard = ({
         </div>
         {isExpanded && (
            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4">
-             <h3 className="text-white font-bold text-lg line-clamp-2">{sequel.missing_title}</h3>
+             <h3 className="text-white font-bold text-lg line-clamp-2 drop-shadow-[0_1px_2px_rgba(0,0,0,0.8)]">{sequel.missing_title}</h3>
            </div>
         )}
       </div>
@@ -471,11 +471,11 @@ export const SequelCard = ({
 
         <div className="flex items-center justify-between mt-4 pt-2 border-t border-gray-800/50">
           {sequel.depth > 1 ? (
-            <span className="text-xs text-yellow-500 bg-yellow-500/10 px-2 py-1 rounded border border-yellow-500/20 flex items-center gap-1">
+            <span className="text-[10px] font-medium text-yellow-500 bg-yellow-500/10 px-1.5 py-0.5 rounded border border-yellow-500/20 flex items-center gap-1">
               Deep Search
             </span>
           ) : (
-            <span className="text-xs text-green-400 bg-green-400/10 px-2 py-1 rounded border border-green-400/20">
+            <span className="text-[10px] font-medium text-green-400 bg-green-400/10 px-1.5 py-0.5 rounded border border-green-400/20">
               Direct Sequel
             </span>
           )}

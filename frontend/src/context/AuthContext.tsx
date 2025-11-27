@@ -10,7 +10,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   token: string | null;
-  login: () => void;
+  login: (force?: boolean) => void;
   logout: () => void;
   isAuthenticated: boolean;
 }
@@ -32,7 +32,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser({
           id: payload.sub,
           username: payload.username,
-          avatar_url: payload.avatar_url // Assuming we add this to token or fetch it
+          avatar_url: payload.avatar_url
         });
       } catch (e) {
         console.error("Invalid token", e);
@@ -44,10 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [token]);
 
-  const login = () => {
+  const login = (force: boolean = false) => {
     // Ensure we don't have double slashes if API_URL ends with /
     const baseUrl = API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL;
-    window.location.href = `${baseUrl}/auth/login`;
+    window.location.href = `${baseUrl}/auth/login${force ? '?force_login=true' : ''}`;
   };
 
   const logout = () => {
