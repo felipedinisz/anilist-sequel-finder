@@ -18,21 +18,25 @@ router = APIRouter()
 
 
 @router.get("/login")
-async def login():
+async def login(force_login: bool = False):
     """
-    Initiate AniList OAuth login (Implicit Grant)
+    Initiate AniList OAuth login (Authorization Code Grant)
 
     Redirects user to AniList authorization page
     """
-    # For Implicit Grant, we redirect to frontend callback
-    redirect_uri = f"{settings.FRONTEND_URL}/auth/callback"
-    
     auth_url = (
         f"{settings.ANILIST_AUTH_URL}"
         f"?client_id={settings.ANILIST_CLIENT_ID}"
-        f"&redirect_uri={redirect_uri}"
-        f"&response_type=token"
+        f"&redirect_uri={settings.ANILIST_REDIRECT_URI}"
+        f"&response_type=code"
     )
+    
+    if force_login:
+        # Try to force login prompt (AniList might not support standard 'prompt' param, but it's worth a try)
+        # Some providers use prompt=login or prompt=consent
+        # max_age=0 forces re-authentication if session is older than 0 seconds
+        auth_url += "&prompt=login&max_age=0"
+
     return RedirectResponse(url=auth_url)
 
 
@@ -88,6 +92,7 @@ async def verify_token(request: TokenVerificationRequest, db: AsyncSession = Dep
             "sub": str(user.id),
             "anilist_id": user.anilist_id,
             "username": user.username,
+            "avatar_url": user.avatar_url,
         }
     )
 
@@ -114,7 +119,7 @@ async def auth_callback(code: str, db: AsyncSession = Depends(get_db)):
     async with httpx.AsyncClient() as client:
         token_response = await client.post(
             settings.ANILIST_TOKEN_URL,
-            json={
+            data={
                 "client_id": settings.ANILIST_CLIENT_ID,
                 "client_secret": settings.ANILIST_CLIENT_SECRET,
                 "redirect_uri": settings.ANILIST_REDIRECT_URI,
@@ -171,6 +176,7 @@ async def auth_callback(code: str, db: AsyncSession = Depends(get_db)):
             "sub": str(user.id),
             "anilist_id": user.anilist_id,
             "username": user.username,
+            "avatar_url": user.avatar_url,
         }
     )
 
