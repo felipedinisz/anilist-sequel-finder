@@ -3,6 +3,7 @@ Authentication routes
 """
 
 import httpx
+import traceback
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -115,75 +116,88 @@ async def auth_callback(code: str, db: AsyncSession = Depends(get_db)):
     Returns:
         User data with JWT token
     """
-    # Exchange code for access token
-    async with httpx.AsyncClient() as client:
-        token_response = await client.post(
-            settings.ANILIST_TOKEN_URL,
-            data={
-                "client_id": settings.ANILIST_CLIENT_ID,
-                "client_secret": settings.ANILIST_CLIENT_SECRET,
-                "redirect_uri": settings.ANILIST_REDIRECT_URI,
-                "code": code,
-                "grant_type": "authorization_code",
-            },
-        )
-
-        if token_response.status_code != 200:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Failed to exchange authorization code",
+    try:
+        # Exchange code for access token
+        async with httpx.AsyncClient() as client:
+            token_response = await client.post(
+                settings.ANILIST_TOKEN_URL,
+                data={
+                    "client_id": settings.ANILIST_CLIENT_ID,
+                    "client_secret": settings.ANILIST_CLIENT_SECRET,
+                    "redirect_uri": settings.ANILIST_REDIRECT_URI,
+                    "code": code,
+                    "grant_type": "authorization_code",
+                },
             )
 
-        token_data = token_response.json()
-        access_token = token_data["access_token"]
+            if token_response.status_code != 200:
+                error_detail = f"Failed to exchange authorization code. Status: {token_response.status_code}, Body: {token_response.text}"
+                print(error_detail)
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=error_detail,
+                )
 
-    # Get user info from AniList
-    anilist_client = AniListClient(access_token)
-    user_info = await anilist_client.get_user_info()
+            token_data = token_response.json()
+            access_token = token_data["access_token"]
 
-    # Check if user exists in database
-    from sqlalchemy import select
+        # Get user info from AniList
+        anilist_client = AniListClient(access_token)
+        user_info = await anilist_client.get_user_info()
 
-    result = await db.execute(
-        select(UserModel).where(UserModel.anilist_id == user_info["id"])
-    )
-    user = result.scalar_one_or_none()
+        # Check if user exists in database
+        from sqlalchemy import select
 
-    if not user:
-        # Create new user
-        user = UserModel(
-            anilist_id=user_info["id"],
-            username=user_info["name"],
-            avatar_url=(
-                user_info["avatar"]["large"] if user_info.get("avatar") else None
-            ),
-            access_token=access_token,
-            settings={},
+        result = await db.execute(
+            select(UserModel).where(UserModel.anilist_id == user_info["id"])
         )
-        db.add(user)
-    else:
-        # Update existing user
-        user.access_token = access_token
-        user.username = user_info["name"]
-        user.avatar_url = user_info["avatar"]["large"] if user_info.get("avatar") else None  # type: ignore
+        user = result.scalar_one_or_none()
 
-    await db.commit()
-    await db.refresh(user)
+        if not user:
+            # Create new user
+            user = UserModel(
+                anilist_id=user_info["id"],
+                username=user_info["name"],
+                avatar_url=(
+                    user_info["avatar"]["large"] if user_info.get("avatar") else None
+                ),
+                access_token=access_token,
+                settings={},
+            )
+            db.add(user)
+        else:
+            # Update existing user
+            user.access_token = access_token
+            user.username = user_info["name"]
+            user.avatar_url = user_info["avatar"]["large"] if user_info.get("avatar") else None  # type: ignore
 
-    # Create JWT token
-    jwt_token = create_access_token(
-        data={
-            "sub": str(user.id),
-            "anilist_id": user.anilist_id,
-            "username": user.username,
-            "avatar_url": user.avatar_url,
-        }
-    )
+        await db.commit()
+        await db.refresh(user)
 
-    # Redirect to frontend with token
-    return RedirectResponse(
-        url=f"{settings.FRONTEND_URL}/auth/callback?token={jwt_token}"
-    )
+        # Create JWT token
+        jwt_token = create_access_token(
+            data={
+                "sub": str(user.id),
+                "anilist_id": user.anilist_id,
+                "username": user.username,
+                "avatar_url": user.avatar_url,
+            }
+        )
+
+        # Redirect to frontend with token
+        return RedirectResponse(
+            url=f"{settings.FRONTEND_URL}/auth/callback?token={jwt_token}"
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        error_msg = f"Error in auth_callback: {str(e)}"
+        print(error_msg)
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_msg
+        )
 
 
 @router.post("/logout")
