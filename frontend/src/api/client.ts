@@ -2,7 +2,8 @@ import axios from 'axios';
 
 // In production, we use relative path if served from same origin, 
 // or VITE_API_URL if set. In dev, it defaults to localhost:8000.
-export const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1');
+const BASE_URL = import.meta.env.VITE_API_URL || (import.meta.env.PROD ? '' : 'http://localhost:8000');
+export const API_URL = `${BASE_URL}/api/v1`;
 
 export const apiClient = axios.create({
   baseURL: API_URL,
