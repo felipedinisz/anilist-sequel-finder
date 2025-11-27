@@ -11,7 +11,7 @@ export const Help = () => {
             <div className="flex-shrink-0 z-10">
               <a href="/" className="flex items-center gap-2 text-white hover:text-blue-400 transition-colors">
                 <ArrowLeft className="w-5 h-5" />
-                <span className="font-medium">Back to App</span>
+                <span className="hidden sm:inline font-medium">Back to App</span>
               </a>
             </div>
 
@@ -19,7 +19,7 @@ export const Help = () => {
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="flex items-center gap-2 pointer-events-auto">
                 <Sparkles className="w-5 h-5 text-blue-400" />
-                <span className="font-bold text-xl text-white tracking-tight">AniList Sequel Finder</span>
+                <span className="font-bold text-base sm:text-xl text-white tracking-tight">AniList Sequel Finder</span>
               </div>
             </div>
           </div>
