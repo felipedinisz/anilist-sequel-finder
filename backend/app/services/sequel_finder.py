@@ -132,9 +132,10 @@ async def find_missing_sequels(
     missing_sequels = []
     queue = []  # Queue of (id, depth, origin_score) tuples for Deep Search
 
-    # Combine lists to check for sequels (Completed + Watching + Repeating + Planning)
-    # We include Planning to ensure we don't suggest things already in the user's backlog
-    source_list = completed + watching + repeating + planning
+    # Combine lists to check for sequels (Completed + Watching + Repeating)
+    # We DO NOT include Planning in source_list because we don't want to suggest sequels for things the user hasn't watched yet.
+    # However, Planning IS included in known_ids (above) so we don't suggest things that are already planned.
+    source_list = completed + watching + repeating
 
     # Define valid anime formats to avoid suggesting Manga/Novels
     # (Since we only fetch the user's ANIME list, suggesting Manga would cause false positives)
