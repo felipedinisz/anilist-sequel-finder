@@ -56,11 +56,12 @@ export interface FindSequelsResponse {
   count: number;
 }
 
-export const findSequels = async (username: string, forceRefresh: boolean = false): Promise<FindSequelsResponse> => {
+export const findSequels = async (username: string, forceRefresh: boolean = false, maxDepth: number = 2): Promise<FindSequelsResponse> => {
   const response = await apiClient.get<FindSequelsResponse>('/sequels/find', {
     params: { 
       username,
-      force_refresh: forceRefresh 
+      force_refresh: forceRefresh,
+      max_depth: maxDepth
     },
   });
   return response.data;

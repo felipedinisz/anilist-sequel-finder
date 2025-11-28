@@ -27,6 +27,7 @@ function SequelFinder() {
   const [minScore, setMinScore] = useState(0);
   const [includeUnrated, setIncludeUnrated] = useState(true);
   const [onlyDirect, setOnlyDirect] = useState(false);
+  const [maxDepth, setMaxDepth] = useState(2);
   const [layout, setLayout] = useState<'grid' | 'list' | 'gallery'>('grid');
   const [sortBy, setSortBy] = useState<'score' | 'title' | 'year'>('score');
   const [filters, setFilters] = useState({
@@ -56,7 +57,7 @@ function SequelFinder() {
     if (!searchUser) return;
     setIsRefreshing(true);
     try {
-      const newData = await findSequels(searchUser, true);
+      const newData = await findSequels(searchUser, true, maxDepth);
       queryClient.setQueryData(['sequels', searchUser], newData);
       showToast('List refreshed successfully', 'success');
     } catch (error) {
@@ -160,8 +161,8 @@ function SequelFinder() {
   };
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['sequels', searchUser],
-    queryFn: () => findSequels(searchUser),
+    queryKey: ['sequels', searchUser, maxDepth],
+    queryFn: () => findSequels(searchUser, false, maxDepth),
     enabled: !!searchUser,
     retry: false,
   });
@@ -330,6 +331,27 @@ function SequelFinder() {
                 </button>
               </div>
             </form>
+            
+            {/* Search Depth Control */}
+            <div className="mt-4 flex flex-col items-center gap-2 text-gray-400">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="font-medium">Search Depth:</span>
+                <span className="bg-gray-800 px-2 py-0.5 rounded text-white font-bold">{maxDepth}</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="5"
+                step="1"
+                value={maxDepth}
+                onChange={(e) => setMaxDepth(parseInt(e.target.value))}
+                className="w-48 h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"
+                title="Higher depth finds more distant sequels but takes longer"
+              />
+              <span className="text-xs text-gray-500">
+                {maxDepth === 1 ? "Direct sequels only" : maxDepth >= 4 ? "Deep search (slower)" : "Balanced search"}
+              </span>
+            </div>
           </div>
         </div>
       </div>

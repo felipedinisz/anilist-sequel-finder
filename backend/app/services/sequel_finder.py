@@ -10,12 +10,15 @@ from app.services.anilist_client import AniListClient
 
 
 async def find_missing_sequels(
-    username: str, access_token: Optional[str] = None, force_refresh: bool = False
+    username: str, 
+    access_token: Optional[str] = None, 
+    force_refresh: bool = False,
+    max_depth: int = 2
 ) -> List[Dict[str, Any]]:
     """Find missing sequels for a given username.
 
     Logic:
-    - Fetch COMPLETED, WATCHING and PLANNING lists
+    - Fetch COMPLETED, WATCHING, REPEATING and PLANNING lists
     - For each media, inspect relations for SEQUEL
     - If sequel is not present in any list, consider missing
     - Recursively search for sequels of missing sequels (Deep Search)
@@ -129,9 +132,9 @@ async def find_missing_sequels(
     missing_sequels = []
     queue = []  # Queue of (id, depth, origin_score) tuples for Deep Search
 
-    # Combine lists to check for sequels (Completed + Watching + Repeating)
-    # We exclude Planning because suggesting sequels for anime not yet watched is usually unwanted
-    source_list = completed + watching + repeating
+    # Combine lists to check for sequels (Completed + Watching + Repeating + Planning)
+    # We include Planning to ensure we don't suggest things already in the user's backlog
+    source_list = completed + watching + repeating + planning
 
     # Define valid anime formats to avoid suggesting Manga/Novels
     # (Since we only fetch the user's ANIME list, suggesting Manga would cause false positives)
@@ -175,7 +178,8 @@ async def find_missing_sequels(
                     }
                     missing_sequels.append(missing_item)
                     known_ids.add(nid)
-                    queue.append((nid, 2, user_score))  # Next depth will be 2
+                    if max_depth > 1:
+                        queue.append((nid, 2, user_score))  # Next depth will be 2
 
     # 2. Deep search: Check sequels of the missing sequels
     # Optimized: Process queue in batches to reduce API calls
@@ -240,7 +244,9 @@ async def find_missing_sequels(
                             }
                             missing_sequels.append(missing_item)
                             known_ids.add(nid)
-                            queue.append((nid, current_depth + 1, origin_score))
+                            
+                            if current_depth < max_depth:
+                                queue.append((nid, current_depth + 1, origin_score))
 
         except Exception as e:
             # In production, use a proper logger

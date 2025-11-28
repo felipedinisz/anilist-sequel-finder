@@ -10,13 +10,15 @@ A modern, full-stack web application to automatically find missing anime sequels
 
 ## ✨ Features
 
-- 🔍 **Smart Detection**: Analyzes your `Completed` and `Watching` lists to find missing sequels.
+- 🔍 **Smart Detection**: Analyzes your `Completed`, `Watching`, and `Repeating` lists to find missing sequels.
+- 🌊 **Adjustable Search Depth**: Control how deep the search goes (Direct sequels vs. Sequels of sequels).
+- 🎯 **Precision Filtering**: Filter by "Direct Sequels Only", format (TV, Movie, OVA), score, and more.
 - 🎨 **Modern UI**: Beautiful, responsive interface built with React and Tailwind CSS.
 - ⚡ **Real-time Updates**: Instant feedback with optimistic UI updates.
 - 🎭 **Smooth Animations**: Powered by Framer Motion for a polished feel.
-- 📊 **Advanced Filtering**: Filter by format (TV, Movie, OVA), score, and more.
 - 🔄 **Auto-Sync**: Automatically adds found sequels to your AniList `Planning` list.
-- 💾 **Smart Caching**: Backend caching to minimize API rate limits and improve speed.
+- �️ **Robust Networking**: Enhanced retry logic to handle AniList API rate limits and timeouts.
+- �💾 **Smart Caching**: Backend caching to minimize API calls and improve speed.
 - 📱 **Responsive**: Works great on desktop and mobile.
 
 ## 🛠️ Tech Stack
@@ -82,14 +84,19 @@ When deploying (e.g., on Render, Railway, Fly.io), set these variables:
 - `SECRET_KEY`: A random secret string for security
 - `JWT_SECRET_KEY`: A random secret string for JWT tokens
 
-## �📖 Usage
+## 📖 Usage
 
 1. Open the frontend in your browser.
 2. Click **"Login with AniList"** to authenticate (optional, but required for adding animes).
-3. Enter your **AniList Username** and click Search.
-4. Browse the missing sequels found.
-5. Use filters to hide OVAs, Movies, or low-rated shows.
-6. Click **"Add to List"** on any anime to add it to your Planning list instantly.
+3. Enter your **AniList Username**.
+4. (Optional) Adjust the **Search Depth** slider:
+   - **1**: Direct sequels only (Fastest).
+   - **2-3**: Balanced search (Recommended).
+   - **4-5**: Deep search (Finds distant sequels, slower).
+5. Click **Search**.
+6. Browse the missing sequels found.
+7. Use filters to hide OVAs, Movies, or low-rated shows.
+8. Click **"Add to List"** on any anime to add it to your Planning list instantly.
 
 ## 🤝 Contributing
 

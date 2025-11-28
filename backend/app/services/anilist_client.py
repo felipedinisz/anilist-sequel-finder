@@ -33,8 +33,8 @@ class AniListClient:
         if self.access_token:
             headers["Authorization"] = f"Bearer {self.access_token}"
 
-        max_retries = 5
-        base_delay = 2.0
+        max_retries = 10
+        base_delay = 1.5
 
         async with httpx.AsyncClient() as client:
             for attempt in range(max_retries):
@@ -43,7 +43,7 @@ class AniListClient:
                         self.api_url,
                         json={"query": query, "variables": variables},
                         headers=headers,
-                        timeout=30.0,
+                        timeout=60.0,
                     )
 
                     if response.status_code == 429:

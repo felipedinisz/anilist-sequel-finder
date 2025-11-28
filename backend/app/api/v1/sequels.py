@@ -17,11 +17,16 @@ router = APIRouter()
 @router.get("/find")
 async def find_sequels(
     username: str = Query(..., description="AniList username"),
-    force_refresh: bool = Query(False, description="Force refresh from AniList API")
+    force_refresh: bool = Query(False, description="Force refresh from AniList API"),
+    max_depth: int = Query(2, description="Maximum depth for recursive sequel search")
 ) -> Dict[str, Any]:
     """Find missing sequels for a username"""
     try:
-        result = await sequel_service.find_missing_sequels(username, force_refresh=force_refresh)
+        result = await sequel_service.find_missing_sequels(
+            username, 
+            force_refresh=force_refresh,
+            max_depth=max_depth
+        )
         return {
             "user": result["user"],
             "missing_sequels": result["missing_sequels"],
