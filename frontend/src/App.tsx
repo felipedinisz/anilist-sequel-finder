@@ -201,7 +201,7 @@ function SequelFinder() {
         return a.missing_title.localeCompare(b.missing_title);
       }
     });
-  }, [data, filters, minScore, includeUnrated, sortBy]);
+  }, [data, filters, minScore, includeUnrated, sortBy, onlyDirect]);
 
   const visibleSequels = filteredSequels.filter(sequel => !addedIds.has(sequel.missing_id));
 
