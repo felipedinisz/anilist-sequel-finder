@@ -121,4 +121,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Made with ❤️ by anime fans, for anime fans**
+**Made with ❤️ by anime fan, for anime fans**
