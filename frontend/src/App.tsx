@@ -26,6 +26,7 @@ function SequelFinder() {
   const [searchUser, setSearchUser] = useState('');
   const [minScore, setMinScore] = useState(0);
   const [includeUnrated, setIncludeUnrated] = useState(true);
+  const [onlyDirect, setOnlyDirect] = useState(false);
   const [layout, setLayout] = useState<'grid' | 'list' | 'gallery'>('grid');
   const [sortBy, setSortBy] = useState<'score' | 'title' | 'year'>('score');
   const [filters, setFilters] = useState({
@@ -180,8 +181,9 @@ function SequelFinder() {
       const isUnrated = !sequel.base_score;
       
       const scoreMatch = isUnrated ? includeUnrated : score >= minScore;
+      const directMatch = onlyDirect ? sequel.depth === 1 : true;
       
-      return formatMatch && scoreMatch;
+      return formatMatch && scoreMatch && directMatch;
     });
 
     // Sorting
@@ -490,6 +492,16 @@ function SequelFinder() {
                           className="w-4 h-4 rounded border-gray-600 text-primary focus:ring-primary bg-gray-800"
                         />
                         <span className="text-xs text-gray-300">Include Unrated</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+                        <input
+                          type="checkbox"
+                          checked={onlyDirect}
+                          onChange={(e) => setOnlyDirect(e.target.checked)}
+                          className="w-4 h-4 rounded border-gray-600 text-primary focus:ring-primary bg-gray-800"
+                        />
+                        <span className="text-xs text-gray-300">Direct Sequels Only</span>
                       </label>
                     </div>
                   </div>

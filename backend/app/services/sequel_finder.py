@@ -95,12 +95,13 @@ async def find_missing_sequels(
         raise e
 
     print("Fetching user lists...")
-    completed, planning, watching, paused, dropped = await asyncio.gather(
+    completed, planning, watching, paused, dropped, repeating = await asyncio.gather(
         fetch_all("COMPLETED"),
         fetch_all("PLANNING"),
         fetch_all("CURRENT"),
         fetch_all("PAUSED"),
         fetch_all("DROPPED"),
+        fetch_all("REPEATING"),
     )
 
     # Sets for O(1) lookup
@@ -109,10 +110,11 @@ async def find_missing_sequels(
     watching_ids = {m.get("id") for m in watching}
     paused_ids = {m.get("id") for m in paused}
     dropped_ids = {m.get("id") for m in dropped}
+    repeating_ids = {m.get("id") for m in repeating}
 
     print(
         f"Stats: {len(completed)} Completed, {len(watching)} Watching, "
-        f"{len(planning)} Planning, {len(paused)} Paused, {len(dropped)} Dropped"
+        f"{len(planning)} Planning, {len(paused)} Paused, {len(dropped)} Dropped, {len(repeating)} Repeating"
     )
 
     # Track what we've seen to avoid cycles and duplicates
@@ -121,14 +123,15 @@ async def find_missing_sequels(
         .union(watching_ids)
         .union(paused_ids)
         .union(dropped_ids)
+        .union(repeating_ids)
     )
 
     missing_sequels = []
     queue = []  # Queue of (id, depth, origin_score) tuples for Deep Search
 
-    # Combine lists to check for sequels (Completed + Watching + Planning)
-    # Now checking ALL lists to ensure full franchise continuity
-    source_list = completed + watching + planning
+    # Combine lists to check for sequels (Completed + Watching + Repeating)
+    # We exclude Planning because suggesting sequels for anime not yet watched is usually unwanted
+    source_list = completed + watching + repeating
 
     # Define valid anime formats to avoid suggesting Manga/Novels
     # (Since we only fetch the user's ANIME list, suggesting Manga would cause false positives)
